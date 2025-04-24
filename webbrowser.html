@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Turtle Tech Browser</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --primary-color: #2cc76a;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+    #browserView {
+      flex-grow: 1;
+      height: 100%;
+    }
+    iframe {
+      border: none;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+  <header class="flex items-center justify-between px-4 py-3 bg-green-500 shadow-md">
+    <div class="flex items-center space-x-3">
+      <img src="Turtle-Tech Logo ().png" alt="Logo" class="h-10">
+      <h1 class="text-2xl font-bold">Turtle Tech Browser</h1>
+    </div>
+    <div class="flex gap-2">
+      <button id="themeToggle" class="bg-white text-green-600 px-3 py-1 rounded shadow transition-all hover:bg-gray-200">Toggle Theme</button>
+      <button onclick="toggleFullScreen()" class="bg-white text-green-600 px-3 py-1 rounded shadow transition-all hover:bg-gray-200">Full Screen</button>
+    </div>
+  </header>
+
+  <div class="px-4 py-2 flex gap-2 bg-gray-800">
+    <input id="urlInput" type="text" placeholder="Enter a URL or search..." class="flex-1 p-2 rounded bg-gray-700 text-white outline-none" />
+    <button onclick="navigate()" class="bg-green-500 px-4 py-2 rounded hover:bg-green-600 transition-all">Go</button>
+  </div>
+
+  <div id="tabs" class="flex gap-2 px-4 py-2 bg-gray-800 overflow-x-auto items-center">
+    <!-- Tabs will be inserted here -->
+    <button onclick="addTab('https://www.bing.com')" class="text-2xl font-bold px-3 py-1 rounded bg-green-600 hover:bg-green-700 text-white transition-all">+</button>
+  </div>
+
+  <div id="browserView" class="flex-grow overflow-hidden">
+    <!-- Iframes will be inserted here -->
+  </div>
+
+  <script>
+    let tabId = 0;
+    let currentTheme = 'dark';
+
+    const urlInput = document.getElementById('urlInput');
+    const tabs = document.getElementById('tabs');
+    const browserView = document.getElementById('browserView');
+    const themeToggle = document.getElementById('themeToggle');
+
+    urlInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') navigate();
+    });
+
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('bg-white');
+      document.body.classList.toggle('text-black');
+      document.body.classList.toggle('text-white');
+      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    });
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    function isValidUrl(input) {
+      return /^(https?:\/\/)?([\w\d-]+\.)+[\w]{2,}(\/.*)?$/.test(input);
+    }
+
+    function navigate() {
+      const input = urlInput.value.trim();
+      if (!input) return;
+
+      let url = '';
+      if (isValidUrl(input)) {
+        url = input.startsWith('http') ? input : 'https://' + input;
+      } else {
+        url = `https://www.bing.com/search?q=${encodeURIComponent(input)}`;
+      }
+      addTab(url);
+    }
+
+    function addTab(url) {
+      tabId++;
+      const iframeId = `iframe-${tabId}`;
+      const tabWrapper = document.createElement('div');
+      tabWrapper.className = 'flex items-center space-x-1 px-2 py-1 bg-gray-700 rounded hover:bg-gray-600 transition-all';
+
+      const tab = document.createElement('button');
+      tab.className = 'text-sm';
+      tab.textContent = `Tab ${tabId}`;
+      tab.onclick = () => activateTab(iframeId);
+
+      const close = document.createElement('button');
+      close.className = 'ml-2 text-red-400 hover:text-red-600 font-bold';
+      close.textContent = '×';
+      close.onclick = (e) => {
+        e.stopPropagation();
+        tabWrapper.remove();
+        const iframe = document.getElementById(iframeId);
+        if (iframe) iframe.remove();
+      };
+
+      tabWrapper.appendChild(tab);
+      tabWrapper.appendChild(close);
+      tabs.insertBefore(tabWrapper, tabs.lastElementChild);
+
+      const iframe = document.createElement('iframe');
+      iframe.src = url;
+      iframe.id = iframeId;
+      iframe.className = 'hidden';
+      browserView.appendChild(iframe);
+
+      activateTab(iframeId);
+    }
+
+    function activateTab(id) {
+      const iframes = browserView.querySelectorAll('iframe');
+      iframes.forEach(frame => frame.classList.add('hidden'));
+
+      const target = document.getElementById(id);
+      if (target) target.classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
